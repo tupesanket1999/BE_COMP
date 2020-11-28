@@ -1,96 +1,95 @@
-#include <cmath>
-#include <cstdlib>
-#include <iostream>
-#include <time.h>
-using namespace std;
+%%cu
+#include<stdio.h>
+#include<stdlib.h>
+#define size 10
 
-__global__ void matrixVectorMultiplication(int *a, int *b, int *c, int n) {
-    int row = threadIdx.x + blockDim.x * blockIdx.x;
-    int sum = 0;
-
-    if (row < n)
-        for (int j = 0; j < n; j++) {
-            sum = sum + a[row * n + j] * b[j];
-        }
-
-    c[row] = sum;
+__global__ void MatMul(int *a, int *b, int*c, int n)
+{
+    int tx = threadIdx.x;
+    int ty = threadIdx.y;
+    int result = 0;
+      for( int j=0;j<size; j++)
+      {
+          int p = *(a + ty*size + j);
+          int q = *(b + j*size + tx);
+          result =  result + p*q;
+      }
+       c[ty*size + tx] = result;
 }
-int main() {
-    int *a, *b, *c;
-    int *a_dev, *b_dev, *c_dev;
-    int n = 32;
 
-    a = new int[n * n];
-    b = new int[n];
-    c = new int[n];
-    int *d = new int[n];
-    int size = n * sizeof(int);
-    cudaMalloc(&a_dev, size * size);
-    cudaMalloc(&b_dev, size);
-    cudaMalloc(&c_dev, size);
 
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < n; j++) {
-            a[i * n + j] = i * n + j + 1; // rand()%n;
+
+int main()
+{
+    int *A,*B,*C;
+    A = (int*)malloc(size * size * sizeof(int));
+    B = (int*)malloc(size * size * sizeof(int));
+    C = (int*)malloc(size * size * sizeof(int));
+    
+    
+    for(int i=0; i<size;i++)
+    {
+        for(int j=0; j<size; j++)
+        {
+            *(A + i*size + j) = rand()%10;
+            *(B + i*size + j) = rand()%10;
         }
-
-        b[i] = i + 1; // rand()%n;
-        // cout<<a[i]<<" ";
-        // d[i]=a[i]+b[i];
     }
-
-    cudaEvent_t start, end;
-
-    cudaEventCreate(&start);
-    cudaEventCreate(&end);
-
-    cudaMemcpy(a_dev, a, size * size, cudaMemcpyHostToDevice);
-    cudaMemcpy(b_dev, b, size, cudaMemcpyHostToDevice);
-
-    dim3 threadsPerBlock(n, n);
-    dim3 blocksPerGrid(1, 1);
-
-    if (n * n > 512) {
-        threadsPerBlock.x = 512;
-        threadsPerBlock.y = 512;
-        blocksPerGrid.x = ceil((double)n / (double)threadsPerBlock.x);
-        blocksPerGrid.y = ceil((double)n / (double)threadsPerBlock.y);
-    }
-
-    cudaEventRecord(start);
-    matrixVectorMultiplication<<<blocksPerGrid, threadsPerBlock>>>(a_dev, b_dev,
-                                                                   c_dev, n);
-
-    cudaEventRecord(end);
-    cudaEventSynchronize(end);
-
-    float time = 0.0;
-    cudaEventElapsedTime(&time, start, end);
-
-    cudaMemcpy(c, c_dev, size, cudaMemcpyDeviceToHost);
-    cout << "\nGPU Time Elapsed:  " << time;
-
-    // CPU matrixVector multiplication
-    clock_t t = clock();
-    int sum = 0;
-    for (int row = 0; row < n; row++) {
-        sum = 0;
-        for (int col = 0; col < n; col++) {
-            sum = sum + a[row * n + col] * b[col];
-        }
-        d[row] = sum;
-    }
-    t = clock() - t;
-    cout << "\nCPU Time Elapsed:  "
-         << ((double)t); //((double)t)/CLOCKS_PER_SEC;
-
-    int error = 0;
-    for (int i = 0; i < n; i++) {
-        error += d[i] - c[i];
-        // cout<<" gpu "<<c[i]<<" CPU "<<d[i]<<endl;
-    }
-
-    cout << "Error : " << error;
-
+    
+    
+    int *AD, *BD, *CD;
+    
+    cudaMalloc(&AD, size*size*sizeof(int));
+    cudaMalloc(&BD, size*size*sizeof(int));
+    cudaMalloc(&CD, size*size*sizeof(int));
+    
+    cudaMemcpy(AD, A, size*size*sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpy(BD, B, size*size*sizeof(int), cudaMemcpyHostToDevice);
+    
+    MatMul<<<1,size*size>>>(AD, BD, CD, size);
+    
+    cudaMemcpy(C, CD, size*size*sizeof(int), cudaMemcpyDeviceToHost);
+    
+    
+    
+   printf("Matrix A: \n");
+	for (int i = 0; i < size; i++)
+	{
+		for (int j = 0; j < size; j++)
+		{
+			printf("%d ", *(A + i*size + j));
+		}
+		printf("\n");
+	}
+	printf("\n");
+	printf("Matrix B: \n");
+	for (int i = 0; i < size; i++)
+	{
+		for (int j = 0; j < size; j++)
+		{
+			printf("%d ", *(B + i*size + j));
+		}
+		printf("\n");
+	}
+	printf("Product: \n");
+	for (int i = 0; i < size; i++)
+	{
+		for (int j = 0; j < size; j++)
+		{
+			printf("%d ", *(C + i*size + j));
+		}
+		printf("\n");
+	}
+	printf("\n");
+    
+    
+    cudaFree(AD);
+    cudaFree(BD);
+    cudaFree(CD);
+    
+    free(A);
+    free(B);
+    free(C);
+    
     return 0;
 }
