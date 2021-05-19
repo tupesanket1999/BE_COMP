@@ -1,0 +1,9 @@
+ Train <- read.csv(file.choose(),header = TRUE)
+ start(Train$Datetime)
+ end(Train$Datetime)
+ frequency(Train$ID)
+ frequency(Train$Datetime)
+ summary(Train)
+ library(forecast)
+ model<-auto.arima(Train$Datetime)
+ model

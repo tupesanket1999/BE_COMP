@@ -1,0 +1,22 @@
+weight_loss
+sweating
+chills
+fatigue
+shivering
+headache
+nausea
+rashes
+red spots
+stomach pain
+loose stools
+muscle aches
+congestion
+runny nose
+tiredness
+chest pain
+yellow skin colour
+dehydration
+lethargy
+diarrhoea
+conjunctivitis
+blister

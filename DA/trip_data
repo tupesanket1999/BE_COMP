@@ -1,0 +1,61 @@
+library(caret)
+library(shiny)
+library(lubridate)
+library(stringr)
+library(plotly)
+library(forecast)
+library(TTR)
+library(ggplot2)
+library(dplyr)
+library(gridExtra)
+
+data<-read.csv(file.choose(),header=TRUE)
+201812-capitalbikeshare-tripdata.csv
+
+data$Start.date <- as.Date(data$Start.date, "%Y-%m-%d")
+
+data_startDate <- aggregate(Bike.number ~ Start.date, data =data, FUN = length)
+
+a <- ggplot(data = data_startDate, aes(Start.date,Bike.number))+
+geom_point() +
+geom_smooth() +
+ggtitle("Trips weekly") +
+ylab("Total Number of Bicycle Trips") +
+xlab("Date")
+
+plot(a)
+
+data_week <- as.data.frame(table(wday(data$Start.date, label= TRUE)))
+
+b <- ggplot(data = data_week, aes(x = Var1, Freq)) +
+geom_col() +
+ggtitle("Total Number of Trips Per Day") +
+ylab("Total Number of Bicycle Trips") +
+xlab("Day of the Week")
+
+plot(b)
+
+data_startDate <- mutate(data_startDate,weekend = (wday(data_startDate$Start.date) == 1 | wday(data_startDate$Start.date) == 7))
+
+data_startDate$weekend <- factor(data_startDate$weekend, labels = c("Weekday", "Weekend"))
+
+c <- ggplot(data = data_startDate, aes(Start.date, Bike.number)) +
+geom_point(aes(color = weekend), size = 3, alpha = 0.65) +
+ggtitle("Total Number of Trips Per Day") +
+ylab("Total Number of Bicycle Trips") +
+xlab("Date")
+
+plot(c)
+
+d<-ggplot(data = data, aes(Start.date)) +
+geom_bar(aes(color = Member.type), stat = "count") +
+ggtitle("Casual Vs. Member") +
+ylab("Total Number of Bicycle Trips") +
+xlab("Trend Across Time")
+
+
+plot(d)
+
+summary(data$Duration/60)
+
+

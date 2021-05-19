@@ -1,0 +1,22 @@
+weight_loss
+sweating
+chills
+fatigue
+shivering
+headache
+nausea
+vomiting
+loss of appetite
+stomach pain
+loose stools
+muscle aches
+congestion
+runny nose
+tiredness
+chest pain
+sore throat
+abdominal pain
+lethargy
+diarrhoea
+conjunctivitis
+blister
